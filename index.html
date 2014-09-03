@@ -236,8 +236,8 @@
                 <label class="col-lg-2 control-label disabled" for="outof_1">Provided Public Keys (N)</label>
                 <div class="col-lg-10 controls">
                   <div class="btn-group" data-toggle="buttons" id="outof_count">
-                    <label class="btn btn-default disabled" title="One public key provided"><input id="outof_1" name="outof_count" type="radio" />1</label>
-                    <label class="btn btn-default disabled" title="Two public keys provided"><input id="outof_2" name="outof_count" type="radio" />2</label>
+                    <label class="btn btn-default"        title="One public key provided (non-standard TX)"><input id="outof_1" name="outof_count" type="radio" />1</label>
+                    <label class="btn btn-default"        title="Two public keys provided (non-standard TX)"><input id="outof_2" name="outof_count" type="radio" />2</label>
                     <label class="btn btn-default active" title="Three public keys provided"><input id="outof_3" name="outof_count" type="radio" />3</label>
                   </div>&nbsp;&nbsp;<span class="help-inline" id="outofMsg">&nbsp;</span>
                 </div>
@@ -304,9 +304,24 @@
             <fieldset>
               <legend>Spend Multisignature P2SH</legend>
               <div class="form-group">
+                <label class="col-lg-2 control-label" for="spend_from_redemption_script">Spend From</label>
+                <div class="col-lg-10 controls">
+                  <div class="btn-group" data-toggle="buttons" id="spend_from">
+                    <label class="btn btn-default active" title="Build a new transaction from a Redemption Script"><input id="spend_from_redemption_script" name="spend_from" type="radio" />Redemption Script</label>
+                    <label class="btn btn-default" title="Sign a previously created multi-signature transaction"><input id="spend_from_unsigned_transaction" name="spend_from" type="radio" />Unsigned Transaction</label>
+                  </div>&nbsp;&nbsp;<span class="help-inline" id="spendFromMsg">&nbsp;</span>
+                </div>
+              </div>
+              <div class="form-group" id="txRedemptionScriptDiv">
                 <label class="col-lg-2 control-label" for="txRedemptionScript">Redemption Script</label>
                 <div class="col-lg-10 controls">
                   <textarea class="form-control" id="txRedemptionScript" rows="5"></textarea>
+                </div>
+              </div>
+              <div class="form-group" id="txRawTransactionDiv">
+                <label class="col-lg-2 control-label" for="txRawTransaction">Raw Transaction (HEX)</label>
+                <div class="col-lg-10 controls">
+                  <textarea class="form-control" id="txRawTransaction" rows="5"></textarea>
                 </div>
               </div>
               <div class="form-group" id="txSec1_group">
@@ -348,12 +363,17 @@
                   <label class="col-lg-2 control-label" for="txBBE">Use History From</label>
                   <div class="col-lg-10 controls">
                     <div class="btn-group" data-toggle="buttons" id="txType">
-                      <label class="btn btn-default active"><input id="txBCI" name="txType" type="radio" />BlockChain Info</label> <label class="btn btn-default"><input id="txBBE" name="txType" type="radio" />Bitcoin Block Explorer</label>
+                      <label class="btn btn-default active">
+                        <input id="txBE" name="txType" type="radio" />BitEasy</label>
+                      <label class="btn btn-default">
+                        <input id="txBCI" name="txType" type="radio" />BlockChain Info</label>
+                      <label class="btn btn-default">
+                        <input id="txBBE" name="txType" type="radio" />Bitcoin Block Explorer</label>
                     </div>&nbsp;<button class="btn btn-default help-inline" id="txGetUnspent" type="button">Download</button>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="col-lg-2 control-label" for="txUnspent">Transaction History</label>
+                  <label class="col-lg-2 control-label" for="txUnspent">Transaction Inputs</label>
                   <div class="col-lg-10 controls">
                     <textarea class="form-control" id="txUnspent" rows="16"></textarea>
                   </div>

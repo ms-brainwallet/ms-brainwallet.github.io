@@ -48,9 +48,13 @@ var TX = new function () {
 
     this.parseInputs = function(text, address) {
         try {
-            var res = tx_parseBCI(text, address);
+            var res = tx_parseBE(text, address);
         } catch(err) {
-            var res = parseTxs(text, address);
+            try {
+                var res = tx_parseBCI(text, address);
+            } catch(err) {
+                var res = tx_parseBBE(text, address);
+            }
         }
 
         balance = res.balance;
@@ -87,8 +91,10 @@ var TX = new function () {
 
         var hashType = 1; // SIGHASH_ALL
         for (var i = 0; i < sendTx.ins.length; i++) {
-            var connectedScript = selectedOuts[i].script;
+            console.log(i);
+            console.log(redemption_script);
             var hash = sendTx.hashTransactionForSignature(redemption_script, i, hashType);
+            console.log('signing ' + Crypto.util.bytesToHex(hash));
             var script = new Bitcoin.Script();
 
             // No idea why this remains in Bitcoin code...
@@ -96,6 +102,8 @@ var TX = new function () {
 
             for (var j = 0; j < eckeys.length; j++ ) {
                 var signature = eckeys[j].sign(hash);
+                //console.log("test verify: " + eckeys[j].verify(hash, signature));
+                console.log("test verify: " + verify_signature(signature, hash, eckeys[j].getPubPoint()));
                 signature.push(parseInt(hashType, 10));
                 script.writeBytes(signature);
             }
@@ -317,6 +325,36 @@ function dumpScript(script) {
     return out.join(' ');
 }
 
+// api.biteasy.com parser
+// uses https://api.biteasy.com/blockchain/v1/addresses/<address>/unspent-outputs
+function tx_parseBE(data, address) {
+    var r = JSON.parse(data);
+    if (r.status != 200)
+        throw 'Bad status';
+
+    var txs = r.data.outputs;
+    if (!txs)
+        throw 'Not a BE format';
+
+    delete unspenttxs;
+    var unspenttxs = {};
+    var balance = BigInteger.ZERO;
+    for (var i in txs) {
+        var o = txs[i];
+        var lilendHash = endian(o.transaction_hash);
+
+        //convert script back to BBE-compatible text
+        var script = dumpScript( new Bitcoin.Script(Crypto.util.hexToBytes(o.script_pub_key)) );
+
+        var value = new BigInteger('' + o.value, 10);
+        if (!(lilendHash in unspenttxs))
+            unspenttxs[lilendHash] = {};
+        unspenttxs[lilendHash][o.transaction_index] = {amount: value, script: script};
+        balance = balance.add(value);
+    }
+    return {balance:balance, unspenttxs:unspenttxs};
+}
+
 // blockchain.info parser (adapted)
 // uses http://blockchain.info/unspent?address=<address>
 function tx_parseBCI(data, address) {
@@ -348,7 +386,7 @@ function tx_parseBCI(data, address) {
 // blockexplorer parser (by BTCurious)
 // uses http://blockexplorer.com/q/mytransactions/<address>
 // --->8---
-function parseTxs(data, address) {
+function tx_parseBBE(data, address) {
 
     var address = address.toString();
     var tmp = JSON.parse(data);
