@@ -998,6 +998,8 @@
             $('#txUnspent').attr('disabled', false);
             $('#txGetUnspent').text("Download");
             $('#txBalance').attr('disabled', false);
+            $('#txFee').val('');
+            $('#txFee').attr('disabled', false);
         } else {
             $("#txRedemptionScriptDiv").addClass("hide");
             $("#txRawTransactionDiv").removeClass("hide");
@@ -1005,6 +1007,7 @@
             $('#txUnspent').attr('disabled', true);
             $('#txGetUnspent').text("Verify");
             $('#txBalance').attr('disabled', true);
+            $('#txFee').attr('disabled', true);
         }
 
         /*$('#pub1').attr('readonly', pubkeys_from != 'manual');
@@ -1345,6 +1348,7 @@
         // set unspent to a fixed string
         $("#txUnspent").val(JSON.stringify({"unspent_outputs":inputs}, null, 4));
         $('#txBalance').val("unknown");
+        $('#txFee').val("unknown");
 
         // setup destination addresses
         var list = $(document).find('.txCC');
@@ -1519,7 +1523,9 @@
             var version = res[0];
             var payload = res[1];
         } catch (err) {
-            setErrorState($('#txSec' + i), true, 'Not a valid private key');
+            if($("#txSec" + i).val() !== "") {
+                setErrorState($('#txSec' + i), true, 'Not a valid private key');
+            }
             return null;
         }
 
