@@ -349,7 +349,7 @@ function tx_parseBE(data, address) {
         var value = new BigInteger('' + o.value, 10);
         if (!(lilendHash in unspenttxs))
             unspenttxs[lilendHash] = {};
-        unspenttxs[lilendHash][o.transaction_index] = {amount: value, script: script};
+        unspenttxs[lilendHash][o.transaction_index] = {amount: value, script: script, script_pub_key: o.script_pub_key};
         balance = balance.add(value);
     }
     return {balance:balance, unspenttxs:unspenttxs};

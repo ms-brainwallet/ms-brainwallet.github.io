@@ -1228,7 +1228,7 @@
             }
 
             inputs.push({
-                'prevout_hash': Crypto.util.bytesToHex(prevout_hash),
+                'prevout_hash': endian(Crypto.util.bytesToHex(prevout_hash)),
                 'prevout_n'   : prevout_n,
                 'scriptSig'   : Crypto.util.bytesToHex(script),
                 'signatures'  : signatures,
@@ -1390,6 +1390,7 @@
 
 
     function txSetUnspent(obj) {
+        $('#txUnspent').val('');
         txUnspent = JSON.stringify(obj, null, 4);
         $('#txUnspent').val(txUnspent);
 
@@ -1403,6 +1404,87 @@
         var value = Math.floor((fval-fee)*1e8)/1e8;
         $('#txValue').val(value);
         txRebuild();
+    }
+
+    function txVerifyUnspent(obj) {
+        var text = JSON.stringify(obj)
+        var address = $("#txAddr").val();
+        try {
+            var res = tx_parseBE(text, address);
+        } catch(err) {
+            try {
+                var res = tx_parseBCI(text, address);
+            } catch(err) {
+                var res = tx_parseBBE(text, address);
+            }
+        }
+
+        //This should be in prevout style as created by txOnChangeRawTransaction
+        var inputs = JSON.parse($("#txUnspent").val())["unspent_outputs"];
+
+        //var balance = res.balance;
+        //var inputs = res.unspenttxs;
+        console.log(res.balance);
+        console.log(res.unspenttxs);
+
+        // Each of the used inputs needs to be "unspent", meanwhile sum up the inputs
+        var in_total = BigInteger.ZERO.clone();
+        for( var i = 0; i < inputs.length; i++ ) {
+            var amount = BigInteger.ZERO.clone();
+            var found = false;
+            var input_prevout_hash = Crypto.util.hexToBytes(inputs[i].prevout_hash);
+            var script_pub_key = null;
+
+            for( var txid in res.unspenttxs ) {
+                var prevout_hash = Crypto.util.hexToBytes(txid).reverse();
+
+                for( var prevout_n in res.unspenttxs[txid] ) {
+                    var unspent = res.unspenttxs[txid][prevout_n];
+            
+                    if( compare_arrays(input_prevout_hash, prevout_hash) == 0 && inputs[i].prevout_n == prevout_n ) {
+                        found = true;
+                        script_pub_key = unspent.script_pub_key;
+                        amount = unspent.amount;
+                        break;
+                    }
+                }
+
+                if(found) break;
+            }
+
+            if(found) {
+                console.log("input " + found + " amount " + amount.toString());
+                inputs[i].amount = Bitcoin.Util.formatValue(amount);
+                inputs[i].script_pub_key = script_pub_key;
+                in_total = in_total.add(amount);
+            } else {
+                // Error, this input wasn't found
+                alert("Invalid transaction: input " + i + " wasn't found. It's likely that input was invalid or has been spent already.");
+                return;
+            }
+        }
+
+        $("#txUnspent").val(JSON.stringify(inputs, null, 4));
+        $("#txBalance").val(Bitcoin.Util.formatValue(in_total));
+
+        // Sum up the outputs, subtract, display the fee
+        var out_total = BigInteger.ZERO.clone();
+        for( var i = 0; i < raw_transaction.outs.length; i++ ) {
+            var out_amount = new BigInteger(Crypto.util.bytesToHex(raw_transaction.outs[i].value.slice(0).reverse()), 16);
+            console.log("out_amount " + out_amount.toString());
+            out_total = out_total.add(out_amount);
+        }
+
+        var fees = in_total.subtract(out_total);
+        if(fees.compareTo(BigInteger.ZERO) < 0) {
+            // Invalid tx! More outputs than inputs
+            alert("Invalid transaction: there are more outputs than inputs. It is recommended that you do not sign this transaction.");
+            return;
+        }
+
+        $("#txFee").val(Bitcoin.Util.formatValue(fees));
+
+        alert("All inputs found as unspent. Double-check your outputs and fees before signing.");
     }
 
     function txUpdateUnspent() {
@@ -1432,8 +1514,11 @@
                 url: url,
                 success: function(res) {
                     console.log(res);
-                    $('#txUnspent').val('');
-                    txSetUnspent(res);
+                    if(spend_from == "redemption_script") {
+                        txSetUnspent(res);
+                    } else {
+                        txVerifyUnspent(res);
+                    }
                 },
                 error:function (xhr, opt, err) {
                     alert(err);
@@ -1561,6 +1646,13 @@
         } else {
             txRebuildFromRawTransaction();
         }
+
+        //var qrCode = qrcode(10, 'L');
+        //var data = Crypto.util.hexToBytes($('#txHex').val());
+        //console.log(data.length);
+        //qrCode.addData(data);
+        //qrCode.make();
+        //$('#txQR').html(qrCode.createImgTag(4, 0));
     }
 
     function txRebuildFromRedemptionScript() {
