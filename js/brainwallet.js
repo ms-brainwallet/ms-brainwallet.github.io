@@ -1564,25 +1564,6 @@
         alert(text ? text : 'No response!');
     }
 
-    function txSend() {
-        var r = '';
-        var tx = $('#txHex').val();
-
-        // Disabled for now because Blockchain.info can't verify
-        // signatures on these transactions properly yet.
-        alert("Since Blockchain.info cannot correctly verify the signatures in a multi-signature transaction correctly yet, pushing is disabled. In order to broadcast this transaction, you need to use another service.  Bitcoind/Bitcoin-Qt's RPC service call sendrawtransaction is known to work.");
-        return;
-
-        //url = 'http://bitsend.rowit.co.uk/?transaction=' + tx;
-        url = 'http://blockchain.info/pushtx';
-        postdata = 'tx=' + tx;
-        url = prompt(r + 'Press OK to send transaction to:', url);
-        if (url != null && url != "") {
-            tx_fetch(url, txSent, txSent, postdata);
-        }
-        return false;
-    }
-
     function txKey(i) {
         setErrorState($('#txSec' + i), false, '');
         var sec = $('#txSec' + i).val();
@@ -2069,7 +2050,6 @@
 
         $('#txAddDest').click(txOnAddDest);
         $('#txRemoveDest').click(txOnRemoveDest);
-        $('#txSend').click(txSend);
         $('#txSign').click(txSign);
 
         // converter
