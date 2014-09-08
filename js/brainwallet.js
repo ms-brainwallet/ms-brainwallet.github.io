@@ -360,7 +360,6 @@
                 keys.push(null);
             }
         }
-        console.log(keys);
 
         for( var i = 0; i < 3; i++ ) {
             if( keys[i] != null ) {
@@ -1110,7 +1109,6 @@
         }
 
         var inputs = [];
-        console.log("found " + num_inputs + " inputs");
         for(var i = 0; i < num_inputs; i++) {
             var prevout_hash  = bytes.slice(offset, offset+32);
             var prevout_n     = Crypto.util.bytesToWords(bytes.slice(offset+32, offset+36).reverse())[0];
@@ -1119,9 +1117,6 @@
             var script_length = p.value;
             offset += p.size + 36;
 
-            console.log(prevout_hash);
-            console.log(prevout_n);
-            console.log(script_length);
             var script = bytes.slice(offset, offset+script_length);
             offset += script_length;
 
@@ -1165,8 +1160,6 @@
                 redemption_script = pushes[pushes.length-1];
 
                 bitcoin_script = new Bitcoin.Script(pushes[pushes.length-1]);
-                console.log('chunks ' + bitcoin_script.chunks.length);
-                console.log(bitcoin_script.chunks);
 
                 var is_multisig = (bitcoin_script.buffer[bitcoin_script.buffer.length-1] == Bitcoin.Opcode.map["OP_CHECKMULTISIG"]);
                 if(!is_multisig) {
@@ -1184,7 +1177,6 @@
                 var hash160 = Bitcoin.Util.sha256ripe160(redemption_script);
                 p2sh_addr = new Bitcoin.Address(hash160);
                 p2sh_addr.version = (coin == 'btc_main') ? 5 : 196;
-                console.log("Found " + m + " of " + n + " multisig for " + p2sh_addr);
 
                 // Extract the pubkeys (to verify signatures against)
                 pubkeys = [bitcoin_script.chunks[1],
@@ -1198,10 +1190,7 @@
                     eckey.pub = decompress_pubkey(pubkeys[j]);
                     eckey.pubKeyHash = Bitcoin.Util.sha256ripe160(eckey.getPub());
                     pubkeys[j] = eckey;
-                    console.log("Pubkey " + j + " is " + Crypto.util.bytesToHex(pubkeys[j].getPub()));
                 }
-
-                console.log("-------------------------------------");
 
             } else {
                 // all the other inputs have to have the exact same redemption script
@@ -1236,7 +1225,6 @@
 
             tx_for_hash.addInput(new Bitcoin.TransactionIn({outpoint: {hash: Crypto.util.bytesToBase64(prevout_hash), index: prevout_n}, script: script, sequence: 4294967295}));
         }
-        console.log(inputs);
 
         var p = parseVarInt(bytes, offset);
         var num_outputs = p.value;
@@ -1248,7 +1236,6 @@
         }
 
         var outputs = [];
-        console.log("found " + num_outputs + " outputs");
         for(var i = 0; i < num_outputs; i++) {
             var value_bytes = bytes.slice(offset, offset+8);
             offset += 8;
@@ -1268,7 +1255,6 @@
             }
 
             var address = new Bitcoin.Address(output_script.simpleOutHash());
-            console.log("output to " + address);
 
             outputs.push({
                 "address": '' + address,
@@ -1290,10 +1276,7 @@
         // Verify all the signatures
         var must_match = 0;
         for(var i = 0; i < inputs.length; i++) {
-            console.log(i);
-            console.log(bitcoin_script);
             var hash_for_signature = tx_for_hash.hashTransactionForSignature(bitcoin_script, i, SIGHASH_ALL);
-            console.log('against ' + Crypto.util.bytesToHex(hash_for_signature));
 
             var matched_pubkeys = Array.apply(null, new Array(pubkeys.length)).map(Number.prototype.valueOf, 0);
             var num_matched = 0;
@@ -1304,7 +1287,6 @@
                     if( pubkeys[k] == null ) continue;
 
                     var signature = Crypto.util.hexToBytes(inputs[i].signatures[j]);
-                    console.log('input ' + i + ' signature ' + j + ' against key ' + k + ' -> ' + verify_signature(signature, hash_for_signature, pubkeys[k].getPubPoint()) );
                     if(verify_signature(signature, hash_for_signature, pubkeys[k].getPubPoint())) {
                         found = k;
                         break;
@@ -1422,11 +1404,6 @@
         //This should be in prevout style as created by txOnChangeRawTransaction
         var inputs = JSON.parse($("#txUnspent").val())["unspent_outputs"];
 
-        //var balance = res.balance;
-        //var inputs = res.unspenttxs;
-        console.log(res.balance);
-        console.log(res.unspenttxs);
-
         // Each of the used inputs needs to be "unspent", meanwhile sum up the inputs
         var in_total = BigInteger.ZERO.clone();
         for( var i = 0; i < inputs.length; i++ ) {
@@ -1453,7 +1430,6 @@
             }
 
             if(found) {
-                console.log("input " + found + " amount " + amount.toString());
                 inputs[i].amount = Bitcoin.Util.formatValue(amount);
                 inputs[i].script_pub_key = script_pub_key;
                 in_total = in_total.add(amount);
@@ -1471,7 +1447,6 @@
         var out_total = BigInteger.ZERO.clone();
         for( var i = 0; i < raw_transaction.outs.length; i++ ) {
             var out_amount = new BigInteger(Crypto.util.bytesToHex(raw_transaction.outs[i].value.slice(0).reverse()), 16);
-            console.log("out_amount " + out_amount.toString());
             out_total = out_total.add(out_amount);
         }
 
@@ -1513,7 +1488,6 @@
             $.ajax({
                 url: url,
                 success: function(res) {
-                    console.log(res);
                     if(spend_from == "redemption_script") {
                         txSetUnspent(res);
                     } else {
@@ -1672,7 +1646,6 @@
         var pubkey2 = (n >= 2) ? redemption_script.chunks[2] : null;
         var pubkey3 = (n >= 3) ? redemption_script.chunks[3] : null;
         var pubkeys = [pubkey1, pubkey2, pubkey3];
-        console.log(pubkeys);
 
         for( var j = 0; j < pubkeys.length; j++ ) {
             if( pubkeys[j] === null ) continue;
@@ -1835,10 +1808,8 @@
                 var sig;
                 if(signkeys[j] instanceof Bitcoin.ECKey) {
                     sig = signkeys[j].sign(hash_for_signature);
-                    console.log("signing " + j);
                 } else {
                     sig = signkeys[j].slice(0);
-                    console.log("appending " + j);
                 }
                 sig.push(parseInt(SIGHASH_ALL, 10));
                 script.writeBytes(sig);
@@ -1961,7 +1932,6 @@
             var checksum = Crypto.SHA256(Crypto.SHA256(decoded.slice(0, decoded.length-4), {asBytes: true}), {asBytes: true});
 
             if( Crypto.util.bytesToHex(checksum.slice(0, 4)) != Crypto.util.bytesToHex(decoded.slice(decoded.length-4)) ) {
-                console.log("bad checksum");
                 return;
             }
 

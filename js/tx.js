@@ -91,10 +91,7 @@ var TX = new function () {
 
         var hashType = 1; // SIGHASH_ALL
         for (var i = 0; i < sendTx.ins.length; i++) {
-            console.log(i);
-            console.log(redemption_script);
             var hash = sendTx.hashTransactionForSignature(redemption_script, i, hashType);
-            console.log('signing ' + Crypto.util.bytesToHex(hash));
             var script = new Bitcoin.Script();
 
             // No idea why this remains in Bitcoin code...
@@ -102,8 +99,6 @@ var TX = new function () {
 
             for (var j = 0; j < eckeys.length; j++ ) {
                 var signature = eckeys[j].sign(hash);
-                //console.log("test verify: " + eckeys[j].verify(hash, signature));
-                console.log("test verify: " + verify_signature(signature, hash, eckeys[j].getPubPoint()));
                 signature.push(parseInt(hashType, 10));
                 script.writeBytes(signature);
             }
