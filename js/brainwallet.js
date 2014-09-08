@@ -996,9 +996,18 @@
             $('#txUnspent').val('');
             $('#txUnspent').attr('disabled', false);
             $('#txGetUnspent').text("Download");
+            $('#txBalance').val('');
             $('#txBalance').attr('disabled', false);
             $('#txFee').val('');
             $('#txFee').attr('disabled', false);
+            $("#txAddDest").removeClass("hide");
+            $("#txRemoveDest").removeClass("hide");
+            $.each($('.txCC'), function() {
+                $(this).find("#txDest").attr('disabled', false);
+                $(this).find("#txValue").attr('disabled', false);
+            });
+            $("#txRedemptionScript").focus();
+            txOnChangeRedemptionScript(false);
         } else {
             $("#txRedemptionScriptDiv").addClass("hide");
             $("#txRawTransactionDiv").removeClass("hide");
@@ -1007,14 +1016,14 @@
             $('#txGetUnspent').text("Verify");
             $('#txBalance').attr('disabled', true);
             $('#txFee').attr('disabled', true);
+            $("#txAddDest").addClass("hide");
+            $("#txRemoveDest").addClass("hide");
+            $.each($('.txCC'), function() {
+                $(this).find("#txDest").attr('disabled', true);
+                $(this).find("#txValue").attr('disabled', true);
+            });
+            $("#txRawTransaction").focus();
         }
-
-        /*$('#pub1').attr('readonly', pubkeys_from != 'manual');
-        $('#pub2').attr('readonly', pubkeys_from != 'manual');
-        $('#pub3').attr('readonly', pubkeys_from != 'manual');
-        $('#redemption_script').attr('readonly', pubkeys_from != 'redemption_script');
-        if( pubkeys_from == 'manual' ) $("#pub1").focus();
-        else if( pubkeys_from == 'redemption_script' ) $("#redemption_script").focus();*/
     }
 
     function update_spend_from() {
